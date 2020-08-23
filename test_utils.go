@@ -3,8 +3,10 @@ package iex
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"strings"
 )
 
@@ -25,10 +27,21 @@ func getRoundTripFunc(path string, statusCode int, respObj interface{}) roundTri
 			resp.StatusCode = statusCode
 			resp.Header = make(http.Header)
 			if respObj != nil {
-				b, _ := json.Marshal(respObj)
-				resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+				if reflect.TypeOf(respObj).Kind() == reflect.Float64 {
+					resp.Body = ioutil.NopCloser(bytes.NewBufferString(fmt.Sprintf("%v", respObj)))
+				} else {
+					b, _ := json.Marshal(respObj)
+					resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+				}
 			}
 		}
 		return resp
+	}
+}
+
+func getTestData(data string, out interface{}) {
+	e := json.Unmarshal([]byte(data), &out)
+	if e != nil {
+		panic(e)
 	}
 }
